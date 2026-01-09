@@ -21,105 +21,80 @@
 <button onclick="generatePDF()">PDF erzeugen</button>
 
 <canvas id="qrcanvas" width="500" height="500" style="display:none;"></canvas>
-<!-- QR-Code Bibliothek -->
-<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<!-- QRCode.js (funktioniert zuverlässig online & offline) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<!-- jsPDF Bibliothek -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Modernes Swiss-Cross PNG (Base64 eingebettet) -->
+<!-- Swiss Cross (modern) -->
 <script>
 const swissCross =
 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAAAfFcSJAAAAvklEQVR4nO3aMQ7CQAxF0XcYBebADGsygEcgEShB2ADbgBGRAhEoTzZZrguSu2Ce279b9Ec/WWEDwgQIECAAAECBAgQ+AKQaROHeYwLg0N+E466+vWXTjhBMWrMUR3pvN8MPv+2MvmP0xSg6u40qCMgfHTCqJNNpJBWlAbIYWCA2PASi6DPd7OJbRRqtD9h5pz2jdK4Zk90un0nLBKBPXn1HULICwhEAhEAhEAhGAJQW2LaxhRNWAAEECAAAECBAgQCAQP4GfgDMSmc5QwAAAAASUVORK5CYII=";
 </script>
 <script>
-// Swiss Payment Standard Payload
 function buildPayload(amount, purpose, sender) {
-
-    // HKEA direkt anhängen (ohne Leerzeichen)
     const finalPurpose = "HKEA" + purpose;
 
     return [
-        "SPC",
-        "0200",
-        "1",
+        "SPC","0200","1",
         "CH880028828840546001T",
-        "K",
-        "XLCH AG",
-        "Rössliweg 48",
-        "4852",
-        "Rothrist",
-        "CH",
-        "", "", "", "", "",
-        amount,
-        "CHF",
+        "K","XLCH AG","Rössliweg 48","4852","Rothrist","CH",
+        "","","","","",
+        amount,"CHF",
         sender ? "K" : "",
-        sender || "", "", "", "", sender ? "CH" : "",
-        "NON",
-        "",
+        sender || "","","","", sender ? "CH" : "",
+        "NON","",
         finalPurpose,
         "EPD"
     ].join("\n");
 }
 
-
-// PDF erzeugen
 async function generatePDF() {
-
     const amount = document.getElementById("amount").value.trim();
     const purpose = document.getElementById("purpose").value.trim();
     const sender = document.getElementById("sender").value.trim();
 
-    if (!amount || !purpose) {
+    if(!amount || !purpose) {
         alert("Bitte Pflichtfelder ausfüllen.");
         return;
     }
 
     const payload = buildPayload(amount, purpose, sender);
 
-    // QR-Code erzeugen (Qrious – online Version)
-    const qr = new QRious({
-        element: document.getElementById("qrcanvas"),
-        value: payload,
-        size: 500,
-        level: "M"
+    // QR-Code erzeugen
+    document.getElementById("qrcanvas").style.display = "block";
+    const container = document.getElementById("qrcanvas");
+    container.innerHTML = "";
+
+    const qrcode = new QRCode(container, {
+        text: payload,
+        width: 500,
+        height: 500,
+        correctLevel: QRCode.CorrectLevel.M
     });
 
-    const canvas = document.getElementById("qrcanvas");
-    const ctx = canvas.getContext("2d");
+    await new Promise(r => setTimeout(r, 500));
 
-    // Swiss Cross Overlay
-    const cross = new Image();
-    cross.src = swissCross;
-    await new Promise(res => cross.onload = res);
+    // Canvas extrahieren (QRCode.js erzeugt ein <img>)
+    const img = container.querySelector("img");
+    const qrPng = img.src;
 
-    ctx.drawImage(
-        cross,
-        (500 - 110) / 2,
-        (500 - 110) / 2,
-        110,
-        110
-    );
-
-    const qrImage = canvas.toDataURL("image/png");
-
-    // PDF erzeugen
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
+    const pdf = new jsPDF("p","mm","a4");
 
+    // Layout
     pdf.setFontSize(12);
-
     pdf.text("Empfangsschein", 20, 20);
     pdf.text("Zahlteil", 110, 20);
-
     pdf.line(0, 148, 210, 148);
 
-    // QR-Code (46 × 46 mm)
-    pdf.addImage(qrImage, "PNG", 20, 155, 46, 46);
+    // Swiss QR Code
+    pdf.addImage(qrPng, "PNG", 20, 155, 46, 46);
 
     pdf.setFontSize(10);
 
-    // Links (Empfangsschein)
+    // Links
     pdf.text("Konto / Zahlbar an:", 20, 60);
     pdf.text("XLCH AG", 20, 65);
     pdf.text("Rössliweg 48", 20, 70);
@@ -127,14 +102,13 @@ async function generatePDF() {
     pdf.text("IBAN: CH88 0028 8288 4054 6001 T", 20, 85);
     pdf.text("Betrag: CHF " + amount, 20, 100);
 
-    // Rechts (Zahlteil)
+    // Rechts
+    const finalPurpose = "HKEA" + purpose;
     pdf.text("Konto / Zahlbar an:", 110, 60);
     pdf.text("XLCH AG", 110, 65);
     pdf.text("Rössliweg 48", 110, 70);
     pdf.text("4852 Rothrist, CH", 110, 75);
     pdf.text("IBAN: CH88 0028 8288 4054 6001 T", 110, 85);
-
-    const finalPurpose = "HKEA" + purpose;
     pdf.text("Verwendungszweck: " + finalPurpose, 110, 100);
 
     if (sender) {

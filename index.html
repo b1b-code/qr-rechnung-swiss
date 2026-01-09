@@ -21,13 +21,13 @@
 <button onclick="generatePDF()">PDF erzeugen</button>
 
 <canvas id="qrcanvas" width="500" height="500" style="display:none;"></canvas>
-<!-- QRCode.js (funktioniert zuverlässig online & offline) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- QRCode.js auf jsDelivr -->
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
-<!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- jsPDF auf jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-<!-- Swiss Cross (modern) -->
+<!-- Swiss Cross -->
 <script>
 const swissCross =
 "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAAAfFcSJAAAAvklEQVR4nO3aMQ7CQAxF0XcYBebADGsygEcgEShB2ADbgBGRAhEoTzZZrguSu2Ce279b9Ec/WWEDwgQIECAAAECBAgQ+AKQaROHeYwLg0N+E466+vWXTjhBMWrMUR3pvN8MPv+2MvmP0xSg6u40qCMgfHTCqJNNpJBWlAbIYWCA2PASi6DPd7OJbRRqtD9h5pz2jdK4Zk90un0nLBKBPXn1HULICwhEAhEAhEAhGAJQW2LaxhRNWAAEECAAAECBAgQCAQP4GfgDMSmc5QwAAAAASUVORK5CYII=";
